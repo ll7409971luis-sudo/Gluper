@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gluper - Juegos Gratis</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background-color: #0d0f1a; color: white; font-family: sans-serif; margin: 0; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; background: #151828; padding: 15px 20px; border-bottom: 2px solid #e94560; border-radius: 8px; }
+        .logo { font-size: 24px; font-weight: bold; color: #e94560; }
+        
+        /* PARRILLA DE TARJETAS LADO A LADO */
+        .grid { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 15px; }
+        .card { background: #1a1d36; width: 180px; padding: 20px; border-radius: 12px; text-align: center; border: 1px solid #282c4b; cursor: pointer; transition: 0.2s; }
+        .card:hover { transform: translateY(-5px); border-color: #e94560; box-shadow: 0 5px 15px rgba(233, 69, 96, 0.4); }
+        .thumb { font-size: 45px; margin-bottom: 10px; }
+        .ad { border: 2px dashed #e94560; padding: 15px; text-align: center; margin: 20px 0; color: #aaa; border-radius: 8px; }
+
+        /* VENTANA PARA JUGAR (PANTALLA FLOTANTE) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; flex-direction: column; z-index: 10; }
+        .modal-content { background: #151828; padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #e94560; position: relative; }
+        .close-btn { position: absolute; top: 10px; right: 15px; background: #e94560; color: white; border: none; padding: 5px 10px; font-weight: bold; border-radius: 5px; cursor: pointer; }
+        canvas { background: black; border: 2px solid white; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">🎮 Gluper</div>
+        <div>Portal de Juegos Web</div>
+    </header>
+
+    <div class="ad">📢 Espacio de Publicidad Reservado</div>
+
+    <h2>🔥 Juegos Destacados</h2>
+    <div class="grid">
+        <div class="card" onclick="abrirJuego()">
+            <div class="thumb">🏃</div>
+            <b>Gluper Runner</b>
+        </div>
+        <div class="card">
+            <div class="thumb">🚀</div>
+            <b>Space Shooter</b>
+        </div>
+        <div class="card">
+            <div class="thumb">🏎️</div>
+            <b>Turbo Racer</b>
+        </div>
+        <div class="card">
+            <div class="thumb">🧱</div>
+            <b>Block Puzzle</b>
+        </div>
+    </div>
+
+    <!-- PANTALLA DEL JUEGO -->
+    <div id="gameModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="cerrarJuego()">X</button>
+            <h2 style="color:#e94560; margin: 0;">🏃 Gluper Runner 2D</h2>
+            <canvas id="gameCanvas" width="500" height="300"></canvas>
+            <p><small>Controles: Flechas ⬅️ ➡️ para moverte | ⬆️ para saltar</small></p>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('gameModal');
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let juegoActivo = false;
+        let player = { x: 50, y: 220, width: 25, height: 25, velY: 0, jumping: false };
+        const gravity = 0.5;
+        const platforms = [
+            { x: 0, y: 270, width: 500, height: 30 },
+            { x: 150, y: 200, width: 100, height: 10 },
+            { x: 300, y: 140, width: 100, height: 10 }
+        ];
+        const keys = {};
+
+        window.addEventListener('keydown', (e) => keys[e.key] = true);
+        window.addEventListener('keyup', (e) => keys[e.key] = false);
+
+        function abrirJuego() {
+            modal.style.display = 'flex';
+            juegoActivo = true;
+            player.x = 50;
+            player.y = 220;
+            gameLoop();
+        }
+
+        function cerrarJuego() {
+            modal.style.display = 'none';
+            juegoActivo = false;
+        }
+
+        function update() {
+            if (keys['ArrowLeft']) player.x -= 4;
+            if (keys['ArrowRight']) player.x += 4;
+            if (keys['ArrowUp'] && !player.jumping) {
+                player.velY = -9;
+                player.jumping = true;
+            }
+
+            player.velY += gravity;
+            player.y += player.velY;
+
+            player.jumping = true;
+            for (let plat of platforms) {
+                if (
+                    player.x < plat.x + plat.width &&
+                    player.x + player.width > plat.x &&
+                    player.y + player.height > plat.y &&
+                    player.y + player.height < plat.y + plat.height + player.velY
+                ) {
+                    player.jumping = false;
+                    player.velY = 0;
+                    player.y = plat.y - player.height;
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#4e54c8';
+            for (let plat of platforms) {
+                ctx.fillRect(plat.x, plat.y, plat.width, plat.height);
+            }
+            ctx.fillStyle = '#e94560';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+        }
+
+        function gameLoop() {
+            if (!juegoActivo) return;
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+    </script>
+
+</body>
+</html>
